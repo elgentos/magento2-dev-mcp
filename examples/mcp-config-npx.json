@@ -2,11 +2,7 @@
   "mcpServers": {
     "magento2-dev": {
       "command": "npx",
-      "args": ["@elgentos/magento2-dev-mcp"],
-      "cwd": "/path/to/your/magento2/project",
-      "env": {
-        "NODE_ENV": "production"
-      }
+      "args": ["-y", "@elgentos/magento2-dev-mcp"]
     }
   }
 }
