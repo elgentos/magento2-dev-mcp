@@ -15,7 +15,7 @@
       "parameters": {
         "scope": {
           "type": "string",
-          "enum": ["global", "frontend", "adminhtml", "webapi_rest", "webapi_soap", "crontab"],
+          "enum": ["global", "adminhtml", "frontend", "crontab", "webapi_rest", "webapi_soap", "graphql", "doc", "admin"],
           "default": "global",
           "description": "The scope to get DI preferences for"
         }
@@ -93,6 +93,27 @@
       "tool": "get-di-preferences",
       "parameters": {
         "scope": "global"
+      }
+    },
+    {
+      "description": "Get adminhtml DI preferences",
+      "tool": "get-di-preferences",
+      "parameters": {
+        "scope": "adminhtml"
+      }
+    },
+    {
+      "description": "Get frontend DI preferences",
+      "tool": "get-di-preferences",
+      "parameters": {
+        "scope": "frontend"
+      }
+    },
+    {
+      "description": "Get GraphQL DI preferences",
+      "tool": "get-di-preferences",
+      "parameters": {
+        "scope": "graphql"
       }
     },
     {

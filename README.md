@@ -53,7 +53,7 @@ Get Magento 2 dependency injection preferences list.
 
 **Parameters:**
 - `scope` (optional): The scope to get DI preferences for
-  - Options: `global`, `frontend`, `adminhtml`, `webapi_rest`, `webapi_soap`, `crontab`
+  - Options: `global`, `adminhtml`, `frontend`, `crontab`, `webapi_rest`, `webapi_soap`, `graphql`, `doc`, `admin`
   - Default: `global`
 
 **Example Usage:**
@@ -65,6 +65,17 @@ Get Magento 2 dependency injection preferences list.
   }
 }
 ```
+
+**Available Scopes:**
+- `global` - Global scope (default)
+- `adminhtml` - Admin area
+- `frontend` - Frontend/storefront area
+- `crontab` - Cron job execution context
+- `webapi_rest` - REST API context
+- `webapi_soap` - SOAP API context
+- `graphql` - GraphQL API context
+- `doc` - Documentation context
+- `admin` - Admin context (alternative to adminhtml)
 
 #### cache-clean
 

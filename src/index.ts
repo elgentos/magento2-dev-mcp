@@ -99,7 +99,17 @@ server.registerTool(
     title: "Get DI Preferences List",
     description: "Get Magento 2 dependency injection preferences list using magerun2",
     inputSchema: {
-      scope: z.enum(["global", "frontend", "adminhtml", "webapi_rest", "webapi_soap", "crontab"])
+      scope: z.enum([
+        "global",
+        "adminhtml",
+        "frontend",
+        "crontab",
+        "webapi_rest",
+        "webapi_soap",
+        "graphql",
+        "doc",
+        "admin"
+      ])
         .default("global")
         .describe("The scope to get DI preferences for")
     }
@@ -156,7 +166,7 @@ server.registerTool(
           type: "text",
           text: result.error
         }],
-        isError: result.isError
+        isError: true
       };
     }
 
