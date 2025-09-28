@@ -4,15 +4,36 @@ A Model Context Protocol (MCP) server for Magento 2 development, designed to int
 
 ## Features
 
-- **DI Preferences Tool**: Get dependency injection preferences using `magerun2 dev:di:preferences:list`
-- **Cache Management Tools**: Complete cache management using magerun2
+- **DI & Module Tools**: Dependency injection and module inspection
+  - Get DI preferences for all scopes
+  - List modules and their status
+  - List module observers
+- **Cache Management**: Complete cache management using magerun2
   - Clean/flush specific or all caches
   - Enable/disable cache types
   - Check cache status
   - Inspect cache entries
-- **JSON Output**: All tools return structured JSON data for easy parsing
+- **System Diagnostics**: System information and health checks
+  - Get system information
+  - Check system requirements
+- **Configuration Management**: View and modify system configuration
+  - Show/set system configuration
+  - Store-specific configuration management
+- **Database Tools**: Direct database access and queries
+  - Execute SQL queries with formatted output
+- **Setup & Deployment**: Database and asset deployment tools
+  - Run setup upgrade
+  - Compile DI configuration
+  - Check database status
+  - Deploy static content
+- **Store Management**: Store, website, and store view management
+  - List all stores and their configuration
+- **Cron Management**: Cron job control and monitoring
+  - List cron jobs
+  - Run specific cron jobs or groups
+- **Multiple Output Formats**: JSON, table, and CSV output for most tools
 - **Error Handling**: Comprehensive error handling with helpful messages
-- **Scope Support**: Support for different Magento scopes (global, frontend, adminhtml, etc.)
+- **Scope Support**: Support for different Magento scopes and contexts
 
 ## Prerequisites
 
@@ -47,6 +68,8 @@ npm run watch
 
 ### Available Tools
 
+## DI & Module Tools
+
 #### get-di-preferences
 
 Get Magento 2 dependency injection preferences list.
@@ -55,16 +78,6 @@ Get Magento 2 dependency injection preferences list.
 - `scope` (optional): The scope to get DI preferences for
   - Options: `global`, `adminhtml`, `frontend`, `crontab`, `webapi_rest`, `webapi_soap`, `graphql`, `doc`, `admin`
   - Default: `global`
-
-**Example Usage:**
-```json
-{
-  "name": "get-di-preferences",
-  "arguments": {
-    "scope": "global"
-  }
-}
-```
 
 **Available Scopes:**
 - `global` - Global scope (default)
@@ -77,106 +90,132 @@ Get Magento 2 dependency injection preferences list.
 - `doc` - Documentation context
 - `admin` - Admin context (alternative to adminhtml)
 
-#### cache-clean
+#### dev-module-list
 
-Clear specific Magento 2 cache types or all caches.
-
-**Parameters:**
-- `types` (optional): Array of specific cache types to clean (leave empty for all caches)
-
-**Example Usage:**
-```json
-{
-  "name": "cache-clean",
-  "arguments": {
-    "types": ["config", "layout"]
-  }
-}
-```
-
-#### cache-flush
-
-Flush specific Magento 2 cache types or all caches.
+List all Magento 2 modules and their status.
 
 **Parameters:**
-- `types` (optional): Array of specific cache types to flush (leave empty for all caches)
+- `format` (optional): Output format (`table`, `json`, `csv`) - Default: `table`
+- `enabled` (optional): Show only enabled modules
+- `disabled` (optional): Show only disabled modules
 
-**Example Usage:**
-```json
-{
-  "name": "cache-flush",
-  "arguments": {
-    "types": ["full_page"]
-  }
-}
-```
+#### dev-module-observer-list
 
-#### cache-enable
-
-Enable specific Magento 2 cache types.
+List all Magento 2 module observers.
 
 **Parameters:**
-- `types` (required): Array of cache types to enable
+- `format` (optional): Output format (`table`, `json`, `csv`) - Default: `table`
+- `event` (optional): Filter by specific event name
 
-**Example Usage:**
-```json
-{
-  "name": "cache-enable",
-  "arguments": {
-    "types": ["config", "layout", "block_html"]
-  }
-}
-```
+## System Diagnostics
 
-#### cache-disable
+#### sys-info
 
-Disable specific Magento 2 cache types.
+Get Magento 2 system information.
 
 **Parameters:**
-- `types` (required): Array of cache types to disable
+- `format` (optional): Output format (`table`, `json`, `csv`) - Default: `table`
 
-**Example Usage:**
-```json
-{
-  "name": "cache-disable",
-  "arguments": {
-    "types": ["full_page"]
-  }
-}
-```
+#### sys-check
 
-#### cache-status
-
-Check the status of all Magento 2 cache types.
+Check Magento 2 system requirements and configuration.
 
 **Parameters:** None
 
-**Example Usage:**
-```json
-{
-  "name": "cache-status",
-  "arguments": {}
-}
-```
+## Cache Management
 
-#### cache-view
+#### cache-clean / cache-flush / cache-enable / cache-disable / cache-status / cache-view
 
-Inspect specific cache entries in Magento 2.
+Complete cache management tools. See [Cache Types Reference](docs/cache-types.md) for details.
+
+## Configuration Management
+
+#### config-show
+
+View Magento 2 system configuration values.
 
 **Parameters:**
-- `key` (required): Cache key to inspect
-- `type` (optional): Cache type
+- `path` (optional): Configuration path to show
+- `scope` (optional): Configuration scope (default, website, store)
+- `scopeId` (optional): Scope ID (website ID or store ID)
 
-**Example Usage:**
-```json
-{
-  "name": "cache-view",
-  "arguments": {
-    "key": "some_cache_key",
-    "type": "config"
-  }
-}
-```
+#### config-set
+
+Set Magento 2 system configuration values.
+
+**Parameters:**
+- `path` (required): Configuration path to set
+- `value` (required): Value to set
+- `scope` (optional): Configuration scope
+- `scopeId` (optional): Scope ID
+- `encrypt` (optional): Encrypt the value
+
+#### config-store-get / config-store-set
+
+Store-specific configuration management tools.
+
+## Database Tools
+
+#### db-query
+
+Execute SQL queries directly on Magento 2 database.
+
+**Parameters:**
+- `query` (required): SQL query to execute
+- `format` (optional): Output format (`table`, `json`, `csv`) - Default: `table`
+
+## Setup & Deployment
+
+#### setup-upgrade
+
+Run Magento 2 setup upgrade to update database schema and data.
+
+**Parameters:**
+- `keepGenerated` (optional): Keep generated files during upgrade
+
+#### setup-di-compile
+
+Compile Magento 2 dependency injection configuration.
+
+#### setup-db-status
+
+Check database status to see if setup:upgrade is needed.
+
+#### setup-static-content-deploy
+
+Deploy Magento 2 static content and assets.
+
+**Parameters:**
+- `languages` (optional): Languages to deploy
+- `themes` (optional): Themes to deploy
+- `jobs` (optional): Number of parallel jobs
+- `force` (optional): Force deployment
+
+## Store Management
+
+#### sys-store-list
+
+List all Magento 2 stores, websites, and store views.
+
+**Parameters:**
+- `format` (optional): Output format (`table`, `json`, `csv`) - Default: `table`
+
+## Cron Management
+
+#### sys-cron-list
+
+List all Magento 2 cron jobs and their configuration.
+
+**Parameters:**
+- `format` (optional): Output format (`table`, `json`, `csv`) - Default: `table`
+
+#### sys-cron-run
+
+Run Magento 2 cron jobs.
+
+**Parameters:**
+- `job` (optional): Specific cron job to run
+- `group` (optional): Cron group to run
 
 ### Common Magento 2 Cache Types
 
