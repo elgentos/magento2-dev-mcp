@@ -2,6 +2,8 @@
 
 A Model Context Protocol (MCP) server for Magento 2 development, designed to integrate with AI agents.
 
+<img width="690" height="705" alt="image" src="https://github.com/user-attachments/assets/491e4f5d-d145-46b7-a509-56982508199a" />
+
 ## DI & Module Tools
 
 <details>
