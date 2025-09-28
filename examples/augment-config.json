@@ -1,0 +1,48 @@
+{
+  "name": "Magento 2 Development MCP Server",
+  "description": "MCP server for Magento 2 development tools",
+  "version": "1.0.0",
+  "server": {
+    "command": "node",
+    "args": ["dist/index.js"],
+    "cwd": ".",
+    "env": {}
+  },
+  "tools": [
+    {
+      "name": "get-di-preferences",
+      "description": "Get Magento 2 dependency injection preferences list",
+      "parameters": {
+        "scope": {
+          "type": "string",
+          "enum": ["global", "frontend", "adminhtml", "webapi_rest", "webapi_soap", "crontab"],
+          "default": "global",
+          "description": "The scope to get DI preferences for"
+        }
+      }
+    }
+  ],
+  "usage_examples": [
+    {
+      "description": "Get global DI preferences",
+      "tool": "get-di-preferences",
+      "parameters": {
+        "scope": "global"
+      }
+    },
+    {
+      "description": "Get frontend DI preferences",
+      "tool": "get-di-preferences",
+      "parameters": {
+        "scope": "frontend"
+      }
+    },
+    {
+      "description": "Get admin DI preferences",
+      "tool": "get-di-preferences",
+      "parameters": {
+        "scope": "adminhtml"
+      }
+    }
+  ]
+}

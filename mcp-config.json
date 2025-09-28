@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "magento2-dev": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "cwd": ".",
+      "env": {},
+      "description": "Magento 2 Development MCP Server",
+      "capabilities": {
+        "tools": true,
+        "resources": false,
+        "prompts": false
+      }
+    }
+  }
+}
