@@ -22,6 +22,72 @@
       }
     },
     {
+      "name": "dev-module-list",
+      "description": "List all Magento 2 modules and their status",
+      "parameters": {
+        "format": {
+          "type": "string",
+          "enum": ["table", "json", "csv"],
+          "default": "table",
+          "description": "Output format"
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Show only enabled modules"
+        },
+        "disabled": {
+          "type": "boolean",
+          "description": "Show only disabled modules"
+        }
+      }
+    },
+    {
+      "name": "dev-module-create",
+      "description": "Create and register a new Magento 2 module",
+      "parameters": {
+        "vendorNamespace": {
+          "type": "string",
+          "description": "Namespace (your company prefix)"
+        },
+        "moduleName": {
+          "type": "string",
+          "description": "Name of your module"
+        },
+        "minimal": {
+          "type": "boolean",
+          "description": "Create only module file"
+        },
+        "addAll": {
+          "type": "boolean",
+          "description": "Add blocks, helpers and models"
+        },
+        "enable": {
+          "type": "boolean",
+          "description": "Enable module after creation"
+        },
+        "addReadme": {
+          "type": "boolean",
+          "description": "Add a readme.md file to generated module"
+        },
+        "addComposer": {
+          "type": "boolean",
+          "description": "Add a composer.json file to generated module"
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Author for readme.md or composer.json"
+        },
+        "authorEmail": {
+          "type": "string",
+          "description": "Author email for readme.md or composer.json"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description for readme.md or composer.json"
+        }
+      }
+    },
+    {
       "name": "cache-clean",
       "description": "Clear specific Magento 2 cache types or all caches",
       "parameters": {
@@ -114,6 +180,36 @@
       "tool": "get-di-preferences",
       "parameters": {
         "scope": "graphql"
+      }
+    },
+    {
+      "description": "List all modules",
+      "tool": "dev-module-list",
+      "parameters": {
+        "format": "table"
+      }
+    },
+    {
+      "description": "List only enabled modules in JSON format",
+      "tool": "dev-module-list",
+      "parameters": {
+        "format": "json",
+        "enabled": true
+      }
+    },
+    {
+      "description": "Create a new module with all features",
+      "tool": "dev-module-create",
+      "parameters": {
+        "vendorNamespace": "MyCompany",
+        "moduleName": "CustomModule",
+        "addAll": true,
+        "enable": true,
+        "addReadme": true,
+        "addComposer": true,
+        "authorName": "John Doe",
+        "authorEmail": "john@example.com",
+        "description": "A custom Magento 2 module"
       }
     },
     {

@@ -482,6 +482,162 @@ server.registerTool(
 );
 
 /**
+ * Tool: Module Create
+ *
+ * Runs `magerun2 dev:module:create` to create and register a new Magento module
+ */
+server.registerTool(
+  "dev-module-create",
+  {
+    title: "Module Create",
+    description: "Create and register a new Magento 2 module",
+    inputSchema: {
+      vendorNamespace: z.string()
+        .describe("Namespace (your company prefix)"),
+      moduleName: z.string()
+        .describe("Name of your module"),
+      minimal: z.boolean()
+        .optional()
+        .describe("Create only module file"),
+      addBlocks: z.boolean()
+        .optional()
+        .describe("Add blocks"),
+      addHelpers: z.boolean()
+        .optional()
+        .describe("Add helpers"),
+      addModels: z.boolean()
+        .optional()
+        .describe("Add models"),
+      addSetup: z.boolean()
+        .optional()
+        .describe("Add SQL setup"),
+      addAll: z.boolean()
+        .optional()
+        .describe("Add blocks, helpers and models"),
+      enable: z.boolean()
+        .optional()
+        .describe("Enable module after creation"),
+      modman: z.boolean()
+        .optional()
+        .describe("Create all files in folder with a modman file"),
+      addReadme: z.boolean()
+        .optional()
+        .describe("Add a readme.md file to generated module"),
+      addComposer: z.boolean()
+        .optional()
+        .describe("Add a composer.json file to generated module"),
+      addStrictTypes: z.boolean()
+        .optional()
+        .describe("Add strict_types declaration to generated PHP files"),
+      authorName: z.string()
+        .optional()
+        .describe("Author for readme.md or composer.json"),
+      authorEmail: z.string()
+        .optional()
+        .describe("Author email for readme.md or composer.json"),
+      description: z.string()
+        .optional()
+        .describe("Description for readme.md or composer.json")
+    }
+  },
+  async ({
+    vendorNamespace,
+    moduleName,
+    minimal,
+    addBlocks,
+    addHelpers,
+    addModels,
+    addSetup,
+    addAll,
+    enable,
+    modman,
+    addReadme,
+    addComposer,
+    addStrictTypes,
+    authorName,
+    authorEmail,
+    description
+  }) => {
+    let command = `magerun2 dev:module:create "${vendorNamespace}" "${moduleName}"`;
+
+    if (minimal) {
+      command += ` --minimal`;
+    }
+
+    if (addBlocks) {
+      command += ` --add-blocks`;
+    }
+
+    if (addHelpers) {
+      command += ` --add-helpers`;
+    }
+
+    if (addModels) {
+      command += ` --add-models`;
+    }
+
+    if (addSetup) {
+      command += ` --add-setup`;
+    }
+
+    if (addAll) {
+      command += ` --add-all`;
+    }
+
+    if (enable) {
+      command += ` --enable`;
+    }
+
+    if (modman) {
+      command += ` --modman`;
+    }
+
+    if (addReadme) {
+      command += ` --add-readme`;
+    }
+
+    if (addComposer) {
+      command += ` --add-composer`;
+    }
+
+    if (addStrictTypes) {
+      command += ` --add-strict-types`;
+    }
+
+    if (authorName) {
+      command += ` --author-name="${authorName}"`;
+    }
+
+    if (authorEmail) {
+      command += ` --author-email="${authorEmail}"`;
+    }
+
+    if (description) {
+      command += ` --description="${description}"`;
+    }
+
+    const result = await executeMagerun2Command(command);
+
+    if (!result.success) {
+      return {
+        content: [{
+          type: "text",
+          text: result.error
+        }],
+        isError: true
+      };
+    }
+
+    return {
+      content: [{
+        type: "text",
+        text: `Module ${vendorNamespace}_${moduleName} created successfully:\n\n${result.data}`
+      }]
+    };
+  }
+);
+
+/**
  * Tool: System Info
  *
  * Runs `magerun2 sys:info` to get system information
@@ -1041,6 +1197,92 @@ server.registerTool(
 );
 
 /**
+ * Tool: Theme List
+ *
+ * Runs `magerun2 dev:theme:list` to list all available themes
+ */
+server.registerTool(
+  "dev-theme-list",
+  {
+    title: "Theme List",
+    description: "List all available Magento 2 themes",
+    inputSchema: {
+      format: z.enum(["table", "json", "csv"])
+        .default("table")
+        .describe("Output format")
+    }
+  },
+  async ({ format = "table" }) => {
+    const command = `magerun2 dev:theme:list --format=${format}`;
+    const result = await executeMagerun2Command(command, format === "json");
+
+    if (!result.success) {
+      return {
+        content: [{
+          type: "text",
+          text: result.error
+        }],
+        isError: true
+      };
+    }
+
+    const responseText = format === "json"
+      ? `Theme list (${format} format):\n\n${JSON.stringify(result.data, null, 2)}`
+      : `Theme list (${format} format):\n\n${result.data}`;
+
+    return {
+      content: [{
+        type: "text",
+        text: responseText
+      }]
+    };
+  }
+);
+
+/**
+ * Tool: Store Config Base URL List
+ *
+ * Runs `magerun2 sys:store:config:base-url:list` to list all base URLs
+ */
+server.registerTool(
+  "sys-store-config-base-url-list",
+  {
+    title: "Store Config Base URL List",
+    description: "List all base URLs for Magento 2 stores",
+    inputSchema: {
+      format: z.enum(["table", "json", "csv"])
+        .default("table")
+        .describe("Output format")
+    }
+  },
+  async ({ format = "table" }) => {
+    const command = `magerun2 sys:store:config:base-url:list --format=${format}`;
+    const result = await executeMagerun2Command(command, format === "json");
+
+    if (!result.success) {
+      return {
+        content: [{
+          type: "text",
+          text: result.error
+        }],
+        isError: true
+      };
+    }
+
+    const responseText = format === "json"
+      ? `Base URL list (${format} format):\n\n${JSON.stringify(result.data, null, 2)}`
+      : `Base URL list (${format} format):\n\n${result.data}`;
+
+    return {
+      content: [{
+        type: "text",
+        text: responseText
+      }]
+    };
+  }
+);
+
+/**
  * Tool: Cron List
  *
  * Runs `magerun2 sys:cron:list` to list cron jobs
@@ -1073,6 +1315,100 @@ server.registerTool(
     const responseText = format === "json"
       ? `Cron job list (${format} format):\n\n${JSON.stringify(result.data, null, 2)}`
       : `Cron job list (${format} format):\n\n${result.data}`;
+
+    return {
+      content: [{
+        type: "text",
+        text: responseText
+      }]
+    };
+  }
+);
+
+/**
+ * Tool: URL List
+ *
+ * Runs `magerun2 sys:url:list` to get all URLs
+ */
+server.registerTool(
+  "sys-url-list",
+  {
+    title: "URL List",
+    description: "Get all Magento 2 URLs",
+    inputSchema: {
+      format: z.enum(["table", "json", "csv"])
+        .default("table")
+        .describe("Output format"),
+      storeId: z.string()
+        .optional()
+        .describe("Store ID to filter URLs")
+    }
+  },
+  async ({ format = "table", storeId }) => {
+    let command = `magerun2 sys:url:list --format=${format}`;
+
+    if (storeId) {
+      command += ` --store-id=${storeId}`;
+    }
+
+    const result = await executeMagerun2Command(command, format === "json");
+
+    if (!result.success) {
+      return {
+        content: [{
+          type: "text",
+          text: result.error
+        }],
+        isError: true
+      };
+    }
+
+    const responseText = format === "json"
+      ? `URL list (${format} format):\n\n${JSON.stringify(result.data, null, 2)}`
+      : `URL list (${format} format):\n\n${result.data}`;
+
+    return {
+      content: [{
+        type: "text",
+        text: responseText
+      }]
+    };
+  }
+);
+
+/**
+ * Tool: Website List
+ *
+ * Runs `magerun2 sys:website:list` to list all websites
+ */
+server.registerTool(
+  "sys-website-list",
+  {
+    title: "Website List",
+    description: "List all Magento 2 websites",
+    inputSchema: {
+      format: z.enum(["table", "json", "csv"])
+        .default("table")
+        .describe("Output format")
+    }
+  },
+  async ({ format = "table" }) => {
+    const command = `magerun2 sys:website:list --format=${format}`;
+    const result = await executeMagerun2Command(command, format === "json");
+
+    if (!result.success) {
+      return {
+        content: [{
+          type: "text",
+          text: result.error
+        }],
+        isError: true
+      };
+    }
+
+    const responseText = format === "json"
+      ? `Website list (${format} format):\n\n${JSON.stringify(result.data, null, 2)}`
+      : `Website list (${format} format):\n\n${result.data}`;
 
     return {
       content: [{
@@ -1149,6 +1485,8 @@ async function main() {
     console.error("- get-di-preferences: Get DI preferences list");
     console.error("- dev-module-list: List all modules and their status");
     console.error("- dev-module-observer-list: List module observers");
+    console.error("- dev-module-create: Create and register a new module");
+    console.error("- dev-theme-list: List all available themes");
     console.error("Cache Management:");
     console.error("- cache-clean: Clear specific or all caches");
     console.error("- cache-flush: Flush specific or all caches");
@@ -1173,6 +1511,9 @@ async function main() {
     console.error("- setup-static-content-deploy: Deploy static content");
     console.error("Store Management:");
     console.error("- sys-store-list: List stores, websites, and store views");
+    console.error("- sys-store-config-base-url-list: List all base URLs");
+    console.error("- sys-url-list: Get all URLs");
+    console.error("- sys-website-list: List all websites");
     console.error("Cron Management:");
     console.error("- sys-cron-list: List cron jobs");
     console.error("- sys-cron-run: Run cron jobs");
