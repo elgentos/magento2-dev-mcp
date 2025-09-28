@@ -1,6 +1,46 @@
 # Magento 2 Development MCP Server
 
-A Model Context Protocol (MCP) server for Magento 2 development, designed to integrate with AI agents.
+A Model Context Protocol (MCP) server for Magento 2 development, designed to integrate with AI agents like Claude, Cursor, Continue.dev, and Augment Code.
+
+## Installation
+
+### Using npx (Recommended)
+
+No installation required! Use directly with npx:
+
+```bash
+npx @elgentos/magento2-dev-mcp
+```
+
+### Local Installation
+
+```bash
+npm install @elgentos/magento2-dev-mcp
+```
+
+## Quick Start
+
+1. **Add to your AI agent's MCP configuration:**
+
+```json
+{
+  "mcpServers": {
+    "magento2-dev": {
+      "command": "npx",
+      "args": ["@elgentos/magento2-dev-mcp"],
+      "cwd": "/path/to/your/magento2/project"
+    }
+  }
+}
+```
+
+2. **Restart your AI agent** to load the MCP server
+
+3. **Start using Magento 2 development tools** through your AI agent!
+
+See [AI Platform Configuration Examples](examples/ai-platform-configs.md) for platform-specific setup instructions.
+
+## Features
 
 ## DI & Module Tools
 
@@ -263,7 +303,54 @@ Store-specific configuration management for getting and setting configuration va
 - Node.js 18.x or higher (required by MCP SDK)
 - n98-magerun2 installed and accessible via PATH
 - Valid Magento 2 installation in the working directory
+- AI agent that supports MCP (Model Context Protocol)
+
+## Publishing to npm
+
+To publish this package to npm:
+
+1. **Build the project:**
+   ```bash
+   npm run build
+   ```
+
+2. **Login to npm:**
+   ```bash
+   npm login
+   ```
+
+3. **Publish:**
+   ```bash
+   npm publish --access public
+   ```
+
+## Development
+
+1. **Clone and install dependencies:**
+   ```bash
+   git clone https://github.com/elgentos/magento2-dev-mcp.git
+   cd magento2-dev-mcp
+   npm install
+   ```
+
+2. **Build:**
+   ```bash
+   npm run build
+   ```
+
+3. **Test locally:**
+   ```bash
+   npm start
+   ```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License - see [LICENSE](LICENSE) file for details.
