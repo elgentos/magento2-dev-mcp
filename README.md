@@ -42,6 +42,8 @@ See [AI Platform Configuration Examples](examples/ai-platform-configs.md) for pl
 
 ## Features
 
+<img width="690" height="705" alt="image" src="https://github.com/user-attachments/assets/491e4f5d-d145-46b7-a509-56982508199a" />
+
 ## DI & Module Tools
 
 <details>
