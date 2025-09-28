@@ -1,6 +1,6 @@
 {
   "name": "@elgentos/magento2-dev-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Magento 2 Development MCP Server for AI agents - provides cache management, module tools, and system diagnostics",
   "main": "dist/index.js",
   "type": "module",

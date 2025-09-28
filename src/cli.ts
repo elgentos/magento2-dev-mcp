@@ -7,14 +7,11 @@ import { readFileSync } from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Import the main server
-import './index.js';
-
 // Display usage information
 function showUsage() {
   const packagePath = join(__dirname, '..', 'package.json');
   const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
-  
+
   console.log(`
 ${packageJson.name} v${packageJson.version}
 ${packageJson.description}
@@ -81,7 +78,21 @@ if (args.includes('--version') || args.includes('-v')) {
   process.exit(0);
 }
 
-// If no special arguments, start the MCP server
-console.log('Starting Magento 2 Development MCP Server...');
-console.log('Server is ready to accept connections from AI agents.');
-console.log('Press Ctrl+C to stop the server.');
+// If no special arguments, start the MCP server by importing the main module
+// This will execute the main() function at the bottom of index.js
+async function startServer() {
+  try {
+    // Import using absolute path to avoid module resolution issues
+    const indexPath = join(__dirname, 'index.js');
+    await import(indexPath);
+  } catch (error) {
+    console.error('Failed to start MCP server:', error);
+    console.error('Error details:', error);
+    console.error('Attempted to import from:', join(__dirname, 'index.js'));
+    console.error('Current working directory:', process.cwd());
+    console.error('__dirname:', __dirname);
+    process.exit(1);
+  }
+}
+
+startServer();

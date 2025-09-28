@@ -13,6 +13,7 @@ yarn-error.log*
 # IDE files
 .vscode/
 .idea/
+**/.idea/
 *.swp
 *.swo
 
@@ -38,3 +39,7 @@ run-server.sh
 # Documentation (keep examples/ and docs/ since they're useful)
 # examples/ - commented out because we want to include these
 # docs/ - commented out because we want to include these
+
+# Exclude IDE files from dist
+dist/.idea/
+dist/**/.idea/
