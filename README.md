@@ -267,24 +267,3 @@ Store-specific configuration management for getting and setting configuration va
 ## License
 
 MIT License - see LICENSE file for details.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## Future Enhancements
-
-Planned tools for future releases:
-
-- Module analysis tools
-- Configuration inspection
-- Database schema analysis
-- Performance profiling tools
-- Code generation helpers
-- Index management tools
-- Log analysis tools
-- Setup and deployment tools
