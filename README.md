@@ -5,6 +5,11 @@ A Model Context Protocol (MCP) server for Magento 2 development, designed to int
 ## Features
 
 - **DI Preferences Tool**: Get dependency injection preferences using `magerun2 dev:di:preferences:list`
+- **Cache Management Tools**: Complete cache management using magerun2
+  - Clean/flush specific or all caches
+  - Enable/disable cache types
+  - Check cache status
+  - Inspect cache entries
 - **JSON Output**: All tools return structured JSON data for easy parsing
 - **Error Handling**: Comprehensive error handling with helpful messages
 - **Scope Support**: Support for different Magento scopes (global, frontend, adminhtml, etc.)
@@ -61,15 +66,125 @@ Get Magento 2 dependency injection preferences list.
 }
 ```
 
-**Example Output:**
+#### cache-clean
+
+Clear specific Magento 2 cache types or all caches.
+
+**Parameters:**
+- `types` (optional): Array of specific cache types to clean (leave empty for all caches)
+
+**Example Usage:**
 ```json
 {
-  "content": [{
-    "type": "text",
-    "text": "Found 15 DI preferences for scope 'global':\n\n{\n  \"Magento\\Framework\\App\\Config\\ScopeConfigInterface\": \"Magento\\Framework\\App\\Config\",\n  \"Magento\\Framework\\ObjectManagerInterface\": \"Magento\\Framework\\ObjectManager\\ObjectManager\",\n  ...\n}"
-  }]
+  "name": "cache-clean",
+  "arguments": {
+    "types": ["config", "layout"]
+  }
 }
 ```
+
+#### cache-flush
+
+Flush specific Magento 2 cache types or all caches.
+
+**Parameters:**
+- `types` (optional): Array of specific cache types to flush (leave empty for all caches)
+
+**Example Usage:**
+```json
+{
+  "name": "cache-flush",
+  "arguments": {
+    "types": ["full_page"]
+  }
+}
+```
+
+#### cache-enable
+
+Enable specific Magento 2 cache types.
+
+**Parameters:**
+- `types` (required): Array of cache types to enable
+
+**Example Usage:**
+```json
+{
+  "name": "cache-enable",
+  "arguments": {
+    "types": ["config", "layout", "block_html"]
+  }
+}
+```
+
+#### cache-disable
+
+Disable specific Magento 2 cache types.
+
+**Parameters:**
+- `types` (required): Array of cache types to disable
+
+**Example Usage:**
+```json
+{
+  "name": "cache-disable",
+  "arguments": {
+    "types": ["full_page"]
+  }
+}
+```
+
+#### cache-status
+
+Check the status of all Magento 2 cache types.
+
+**Parameters:** None
+
+**Example Usage:**
+```json
+{
+  "name": "cache-status",
+  "arguments": {}
+}
+```
+
+#### cache-view
+
+Inspect specific cache entries in Magento 2.
+
+**Parameters:**
+- `key` (required): Cache key to inspect
+- `type` (optional): Cache type
+
+**Example Usage:**
+```json
+{
+  "name": "cache-view",
+  "arguments": {
+    "key": "some_cache_key",
+    "type": "config"
+  }
+}
+```
+
+### Common Magento 2 Cache Types
+
+When using the cache tools, you can specify these common cache types:
+
+- `config` - Configuration cache
+- `layout` - Layout cache
+- `block_html` - Block HTML cache
+- `collections` - Collections cache
+- `reflection` - Reflection cache
+- `db_ddl` - Database DDL cache
+- `compiled_config` - Compiled configuration cache
+- `eav` - EAV types and attributes cache
+- `customer_notification` - Customer notification cache
+- `config_integration` - Integration configuration cache
+- `config_integration_api` - Integration API configuration cache
+- `full_page` - Full page cache
+- `config_webservice` - Web service configuration cache
+- `translate` - Translation cache
 
 ## Integration
 
@@ -177,7 +292,9 @@ Planned tools for future releases:
 
 - Module analysis tools
 - Configuration inspection
-- Cache management
 - Database schema analysis
 - Performance profiling tools
 - Code generation helpers
+- Index management tools
+- Log analysis tools
+- Setup and deployment tools

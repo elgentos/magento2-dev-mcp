@@ -20,6 +20,71 @@
           "description": "The scope to get DI preferences for"
         }
       }
+    },
+    {
+      "name": "cache-clean",
+      "description": "Clear specific Magento 2 cache types or all caches",
+      "parameters": {
+        "types": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Specific cache types to clean (leave empty for all caches)"
+        }
+      }
+    },
+    {
+      "name": "cache-flush",
+      "description": "Flush specific Magento 2 cache types or all caches",
+      "parameters": {
+        "types": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Specific cache types to flush (leave empty for all caches)"
+        }
+      }
+    },
+    {
+      "name": "cache-enable",
+      "description": "Enable specific Magento 2 cache types",
+      "parameters": {
+        "types": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Cache types to enable",
+          "minItems": 1
+        }
+      }
+    },
+    {
+      "name": "cache-disable",
+      "description": "Disable specific Magento 2 cache types",
+      "parameters": {
+        "types": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Cache types to disable",
+          "minItems": 1
+        }
+      }
+    },
+    {
+      "name": "cache-status",
+      "description": "Check the status of Magento 2 cache types",
+      "parameters": {}
+    },
+    {
+      "name": "cache-view",
+      "description": "Inspect specific cache entries in Magento 2",
+      "parameters": {
+        "key": {
+          "type": "string",
+          "description": "Cache key to inspect"
+        },
+        "type": {
+          "type": "string",
+          "description": "Cache type (optional)"
+        }
+      }
     }
   ],
   "usage_examples": [
@@ -31,17 +96,49 @@
       }
     },
     {
-      "description": "Get frontend DI preferences",
-      "tool": "get-di-preferences",
+      "description": "Clean all caches",
+      "tool": "cache-clean",
+      "parameters": {}
+    },
+    {
+      "description": "Clean specific cache types",
+      "tool": "cache-clean",
       "parameters": {
-        "scope": "frontend"
+        "types": ["config", "layout"]
       }
     },
     {
-      "description": "Get admin DI preferences",
-      "tool": "get-di-preferences",
+      "description": "Flush full page cache",
+      "tool": "cache-flush",
       "parameters": {
-        "scope": "adminhtml"
+        "types": ["full_page"]
+      }
+    },
+    {
+      "description": "Enable cache types",
+      "tool": "cache-enable",
+      "parameters": {
+        "types": ["config", "layout", "block_html"]
+      }
+    },
+    {
+      "description": "Disable full page cache",
+      "tool": "cache-disable",
+      "parameters": {
+        "types": ["full_page"]
+      }
+    },
+    {
+      "description": "Check cache status",
+      "tool": "cache-status",
+      "parameters": {}
+    },
+    {
+      "description": "View cache entry",
+      "tool": "cache-view",
+      "parameters": {
+        "key": "some_cache_key",
+        "type": "config"
       }
     }
   ]
