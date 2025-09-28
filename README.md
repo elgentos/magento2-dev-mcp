@@ -2,20 +2,14 @@
 
 A Model Context Protocol (MCP) server for Magento 2 development, designed to integrate with AI agents like Claude, Cursor, Continue.dev, and Augment Code.
 
+<img width="690" height="705" alt="image" src="https://github.com/user-attachments/assets/491e4f5d-d145-46b7-a509-56982508199a" />
+
 ## Installation
 
-### Using npx (Recommended)
-
-No installation required! Use directly with npx:
+### Using npx
 
 ```bash
-npx @elgentos/magento2-dev-mcp
-```
-
-### Local Installation
-
-```bash
-npm install @elgentos/magento2-dev-mcp
+npx -y @elgentos/magento2-dev-mcp
 ```
 
 ## Quick Start
@@ -27,8 +21,7 @@ npm install @elgentos/magento2-dev-mcp
   "mcpServers": {
     "magento2-dev": {
       "command": "npx",
-      "args": ["@elgentos/magento2-dev-mcp"],
-      "cwd": "/path/to/your/magento2/project"
+      "args": ["-y", "@elgentos/magento2-dev-mcp"]
     }
   }
 }
@@ -41,8 +34,6 @@ npm install @elgentos/magento2-dev-mcp
 See [AI Platform Configuration Examples](examples/ai-platform-configs.md) for platform-specific setup instructions.
 
 ## Features
-
-<img width="690" height="705" alt="image" src="https://github.com/user-attachments/assets/491e4f5d-d145-46b7-a509-56982508199a" />
 
 ## DI & Module Tools
 
@@ -299,59 +290,6 @@ Store-specific configuration management for getting and setting configuration va
 - `group` (optional): Cron group to run
 
 </details>
-
-## Requirements
-
-- Node.js 18.x or higher (required by MCP SDK)
-- n98-magerun2 installed and accessible via PATH
-- Valid Magento 2 installation in the working directory
-- AI agent that supports MCP (Model Context Protocol)
-
-## Publishing to npm
-
-To publish this package to npm:
-
-1. **Build the project:**
-   ```bash
-   npm run build
-   ```
-
-2. **Login to npm:**
-   ```bash
-   npm login
-   ```
-
-3. **Publish:**
-   ```bash
-   npm publish --access public
-   ```
-
-## Development
-
-1. **Clone and install dependencies:**
-   ```bash
-   git clone https://github.com/elgentos/magento2-dev-mcp.git
-   cd magento2-dev-mcp
-   npm install
-   ```
-
-2. **Build:**
-   ```bash
-   npm run build
-   ```
-
-3. **Test locally:**
-   ```bash
-   npm start
-   ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
 
 ## License
 
