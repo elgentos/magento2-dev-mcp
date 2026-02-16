@@ -5,6 +5,8 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { executePhpScript } from "./php-executor.js";
+import { formatPluginAnalysis } from "./plugin-list-formatter.js";
 
 const execAsync = promisify(exec);
 
@@ -1471,6 +1473,46 @@ server.registerTool(
 );
 
 /**
+ * Tool: Get Plugin List
+ *
+ * Analyzes Magento 2 plugin (interceptor) configuration for a given class
+ * across all scopes in a single execution. When methodName is omitted,
+ * scans all public methods of the class.
+ */
+server.registerTool(
+  "dev-plugin-list",
+  {
+    title: "Get Plugin List",
+    description: "Get Magento 2 plugin (interceptor) list for a class across all scopes (global, adminhtml, frontend, crontab, webapi_rest, webapi_soap, graphql, doc, admin). When methodName is provided, analyzes that single method. When omitted, scans all public methods and reports only those with plugins.",
+    inputSchema: {
+      className: z.string()
+        .describe("Fully qualified PHP class or interface name (e.g., 'Magento\\Catalog\\Model\\Product')"),
+      methodName: z.string()
+        .optional()
+        .describe("Method name to inspect (e.g., 'save'). Omit to scan all public methods.")
+    }
+  },
+  async ({ className, methodName }) => {
+    const args = [process.cwd(), className];
+    if (methodName) {
+      args.push(methodName);
+    }
+    const result = await executePhpScript('get-plugins.php', args);
+
+    if (!result.success) {
+      return {
+        content: [{ type: "text", text: result.error }],
+        isError: true
+      };
+    }
+
+    return {
+      content: [{ type: "text", text: formatPluginAnalysis(result.data) }]
+    };
+  }
+);
+
+/**
  * Start the server
  */
 async function main() {
@@ -1487,6 +1529,7 @@ async function main() {
     console.error("- dev-module-observer-list: List module observers");
     console.error("- dev-module-create: Create and register a new module");
     console.error("- dev-theme-list: List all available themes");
+    console.error("- dev-plugin-list: Get plugin interceptors for a class method");
     console.error("Cache Management:");
     console.error("- cache-clean: Clear specific or all caches");
     console.error("- cache-flush: Flush specific or all caches");

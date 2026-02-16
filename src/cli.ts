@@ -56,7 +56,7 @@ AVAILABLE TOOLS:
   - Database: query
   - Setup: upgrade, di-compile, db-status, static-content-deploy
   - Cron: list, run
-  - DI Tools: get-di-preferences
+  - DI Tools: get-di-preferences, dev-plugin-list
 
 For detailed documentation, visit:
 ${packageJson.homepage}

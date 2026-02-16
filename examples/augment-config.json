@@ -88,6 +88,20 @@
       }
     },
     {
+      "name": "dev-plugin-list",
+      "description": "Get Magento 2 plugin (interceptor) list for a class across all scopes. When methodName is provided, analyzes that single method. When omitted, scans all public methods and reports only those with plugins.",
+      "parameters": {
+        "className": {
+          "type": "string",
+          "description": "Fully qualified PHP class or interface name (e.g., 'Magento\\Catalog\\Model\\Product')"
+        },
+        "methodName": {
+          "type": "string",
+          "description": "Method name to inspect (e.g., 'save'). Omit to scan all public methods."
+        }
+      }
+    },
+    {
       "name": "cache-clean",
       "description": "Clear specific Magento 2 cache types or all caches",
       "parameters": {
@@ -180,6 +194,29 @@
       "tool": "get-di-preferences",
       "parameters": {
         "scope": "graphql"
+      }
+    },
+    {
+      "description": "Get plugins for a specific method across all scopes",
+      "tool": "dev-plugin-list",
+      "parameters": {
+        "className": "Magento\\Catalog\\Api\\ProductRepositoryInterface",
+        "methodName": "save"
+      }
+    },
+    {
+      "description": "Scan all public methods of a class for plugins",
+      "tool": "dev-plugin-list",
+      "parameters": {
+        "className": "Magento\\Framework\\View\\LayoutInterface"
+      }
+    },
+    {
+      "description": "Get plugins for a concrete class (resolves parent classes and interfaces)",
+      "tool": "dev-plugin-list",
+      "parameters": {
+        "className": "Magento\\Catalog\\Model\\Product",
+        "methodName": "save"
       }
     },
     {

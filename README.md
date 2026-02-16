@@ -33,6 +33,7 @@ npx -y @elgentos/magento2-dev-mcp
 
 See [AI Platform Configuration Examples](examples/ai-platform-configs.md) for platform-specific setup instructions.
 
+
 ## Features
 
 ## DI & Module Tools
@@ -123,6 +124,42 @@ See [AI Platform Configuration Examples](examples/ai-platform-configs.md) for pl
   }
 }
 ```
+
+</details>
+
+<details>
+<summary><strong>dev-plugin-list</strong> - Get plugin (interceptor) list for a class</summary>
+
+Analyzes `di.xml` files across all DI scopes to find plugins for a given class. Resolves the full class hierarchy (parent classes and interfaces) so inherited plugins are included. Returns the plugin list, sort order, and full execution order chain per scope.
+
+**Parameters:**
+- `className` (required): Fully qualified PHP class or interface name
+- `methodName` (optional): Method name to inspect. Omit to scan all public methods.
+
+**Example — single method:**
+```json
+{
+  "name": "dev-plugin-list",
+  "arguments": {
+    "className": "Magento\\Catalog\\Api\\ProductRepositoryInterface",
+    "methodName": "save"
+  }
+}
+```
+
+**Example — scan all methods of a class:**
+```json
+{
+  "name": "dev-plugin-list",
+  "arguments": {
+    "className": "Magento\\Framework\\View\\LayoutInterface"
+  }
+}
+```
+
+**Scopes checked:** `global`, `adminhtml`, `frontend`, `crontab`, `webapi_rest`, `webapi_soap`, `graphql`
+
+**Docker support:** Automatically detects Warden, DDEV, docker-magento, and docker-compose environments. Falls back to local PHP.
 
 </details>
 
