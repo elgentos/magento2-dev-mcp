@@ -2,94 +2,17 @@ import { exec, ExecOptions } from "child_process";
 import { promisify } from "util";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import { existsSync, readFileSync, readdirSync, copyFileSync, mkdirSync, rmSync } from "fs";
+import { readdirSync, copyFileSync, mkdirSync, rmSync } from "fs";
+import { detectDockerEnvironment, shellQuote, type DockerEnvironment } from "./docker-env.js";
 
 const execAsync = promisify(exec);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-interface DockerEnvironment {
-  type: string;
-  buildCommands: (scriptPath: string, args: string[]) => string[];
-  containerRoot: string;
-}
-
 export type PhpScriptResult =
   | { success: true; data: any }
   | { success: false; error: string; isError: true };
-
-/**
- * Escape a string for safe use inside single-quoted shell arguments.
- * Uses the standard end-quote, escaped-quote, re-open-quote pattern: '\''
- */
-function shellQuote(arg: string): string {
-  return "'" + arg.replace(/'/g, "'\\''") + "'";
-}
-
-/**
- * Detect Docker environment type for the given project root.
- * Returns null if no Docker environment is detected.
- */
-function detectDockerEnvironment(projectRoot: string): DockerEnvironment | null {
-  const buildSingleCommand = (prefix: string) =>
-    (scriptPath: string, args: string[]) => {
-      const quotedArgs = args.map(a => shellQuote(a)).join(' ');
-      return [`${prefix} php ${scriptPath} ${quotedArgs}`];
-    };
-
-  // Warden: .env file contains WARDEN_ENV_TYPE
-  const envFile = join(projectRoot, '.env');
-  if (existsSync(envFile)) {
-    try {
-      const envContent = readFileSync(envFile, 'utf8');
-      if (envContent.includes('WARDEN_ENV_TYPE')) {
-        return {
-          type: 'warden',
-          buildCommands: (scriptPath, args) => {
-            const quotedArgs = args.map(a => shellQuote(a)).join(' ');
-            return [`warden shell -c "php ${scriptPath} ${quotedArgs}"`];
-          },
-          containerRoot: '/var/www/html',
-        };
-      }
-    } catch {}
-  }
-
-  // DDEV: .ddev/ directory exists
-  if (existsSync(join(projectRoot, '.ddev'))) {
-    return {
-      type: 'ddev',
-      buildCommands: buildSingleCommand('ddev exec'),
-      containerRoot: '/var/www/html',
-    };
-  }
-
-  // docker-magento: bin/clinotty file exists
-  if (existsSync(join(projectRoot, 'bin', 'clinotty'))) {
-    return {
-      type: 'docker-magento',
-      buildCommands: buildSingleCommand('bin/clinotty'),
-      containerRoot: '/var/www/html',
-    };
-  }
-
-  // docker-compose: docker-compose.yml or compose.yaml exists
-  if (existsSync(join(projectRoot, 'docker-compose.yml')) || existsSync(join(projectRoot, 'compose.yaml'))) {
-    return {
-      type: 'docker-compose',
-      buildCommands: (scriptPath, args) => {
-        const quotedArgs = args.map(a => shellQuote(a)).join(' ');
-        return ['phpfpm', 'php-fpm', 'php'].map(
-          service => `docker compose exec -T ${service} php ${scriptPath} ${quotedArgs}`
-        );
-      },
-      containerRoot: '/var/www/html',
-    };
-  }
-
-  return null;
-}
 
 /**
  * Execute a PHP command, log stderr, and return parsed JSON output.
@@ -128,7 +51,7 @@ async function executeViaDocker(
     const containerArgs = [...args];
     containerArgs[0] = dockerEnv.containerRoot;
     const containerScriptPath = `${dockerEnv.containerRoot}/var/tmp/mcp-php/${scriptName}`;
-    const commands = dockerEnv.buildCommands(containerScriptPath, containerArgs);
+    const commands = dockerEnv.buildPhpCommands(containerScriptPath, containerArgs);
 
     for (const command of commands) {
       try {

@@ -48,6 +48,21 @@ CONFIGURATION:
     }
   }
 
+ENVIRONMENT VARIABLES:
+  MAGERUN2_COMMAND    Override the magerun2 binary name or path
+                      (default: "magerun2")
+                      Example: MAGERUN2_COMMAND=n98-magerun2
+
+DOCKER ENVIRONMENTS:
+  Automatically detected and supported:
+  - Warden (WARDEN_ENV_TYPE in .env)
+  - DDEV (.ddev/ directory)
+  - docker-magento (bin/clinotty)
+  - docker-compose (docker-compose.yml or compose.yaml)
+
+  When a Docker environment is detected, magerun2 commands are executed
+  inside the container with a local fallback.
+
 AVAILABLE TOOLS:
   - Cache Management: clean, flush, enable, disable, status, view
   - Module Tools: list, create, observer-list

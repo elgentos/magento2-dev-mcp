@@ -33,6 +33,42 @@ npx -y @elgentos/magento2-dev-mcp
 
 See [AI Platform Configuration Examples](examples/ai-platform-configs.md) for platform-specific setup instructions.
 
+## Docker Environment Support
+
+The server automatically detects Docker-based Magento environments and routes `magerun2` commands through the container:
+
+| Environment | Detection | Command prefix |
+|---|---|---|
+| **Warden** | `WARDEN_ENV_TYPE` in `.env` | `warden shell -c '...'` |
+| **DDEV** | `.ddev/` directory | `ddev exec ...` |
+| **docker-magento** | `bin/clinotty` file | `bin/clinotty ...` |
+| **docker-compose** | `docker-compose.yml` or `compose.yaml` | `docker compose exec -T <service> ...` |
+
+For docker-compose the server tries the service names `phpfpm`, `php-fpm`, and `php` in order.
+
+If Docker execution fails, the server falls back to running `magerun2` locally.
+
+## Environment Variables
+
+| Variable | Description | Default |
+|---|---|---|
+| `MAGERUN2_COMMAND` | Override the magerun2 binary name or path | `magerun2` |
+
+Use `MAGERUN2_COMMAND` when your system installs the binary under a different name (e.g. `n98-magerun2`) or when you need to specify an absolute path:
+
+```json
+{
+  "mcpServers": {
+    "magento2-dev": {
+      "command": "npx",
+      "args": ["-y", "@elgentos/magento2-dev-mcp"],
+      "env": {
+        "MAGERUN2_COMMAND": "n98-magerun2"
+      }
+    }
+  }
+}
+```
 
 ## Features
 
