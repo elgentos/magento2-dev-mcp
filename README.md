@@ -33,6 +33,43 @@ npx -y @elgentos/magento2-dev-mcp
 
 See [AI Platform Configuration Examples](examples/ai-platform-configs.md) for platform-specific setup instructions.
 
+## Docker Environment Support
+
+The server automatically detects Docker-based Magento environments and routes `magerun2` commands through the container:
+
+| Environment | Detection | Command prefix |
+|---|---|---|
+| **Warden** | `WARDEN_ENV_TYPE` in `.env` | `warden shell -c '...'` |
+| **DDEV** | `.ddev/` directory | `ddev exec ...` |
+| **docker-magento** | `bin/clinotty` file | `bin/clinotty ...` |
+| **docker-compose** | `docker-compose.yml` or `compose.yaml` | `docker compose exec -T <service> ...` |
+
+For docker-compose the server tries the service names `phpfpm`, `php-fpm`, and `php` in order.
+
+If Docker execution fails, the server falls back to running `magerun2` locally.
+
+## Environment Variables
+
+| Variable | Description | Default |
+|---|---|---|
+| `MAGERUN2_COMMAND` | Override the magerun2 binary name or path | `magerun2` |
+
+Use `MAGERUN2_COMMAND` when your system installs the binary under a different name (e.g. `n98-magerun2`) or when you need to specify an absolute path:
+
+```json
+{
+  "mcpServers": {
+    "magento2-dev": {
+      "command": "npx",
+      "args": ["-y", "@elgentos/magento2-dev-mcp"],
+      "env": {
+        "MAGERUN2_COMMAND": "n98-magerun2"
+      }
+    }
+  }
+}
+```
+
 ## Features
 
 ## DI & Module Tools
@@ -123,6 +160,42 @@ See [AI Platform Configuration Examples](examples/ai-platform-configs.md) for pl
   }
 }
 ```
+
+</details>
+
+<details>
+<summary><strong>dev-plugin-list</strong> - Get plugin (interceptor) list for a class</summary>
+
+Analyzes `di.xml` files across all DI scopes to find plugins for a given class. Resolves the full class hierarchy (parent classes and interfaces) so inherited plugins are included. Returns the plugin list, sort order, and full execution order chain per scope.
+
+**Parameters:**
+- `className` (required): Fully qualified PHP class or interface name
+- `methodName` (optional): Method name to inspect. Omit to scan all public methods.
+
+**Example — single method:**
+```json
+{
+  "name": "dev-plugin-list",
+  "arguments": {
+    "className": "Magento\\Catalog\\Api\\ProductRepositoryInterface",
+    "methodName": "save"
+  }
+}
+```
+
+**Example — scan all methods of a class:**
+```json
+{
+  "name": "dev-plugin-list",
+  "arguments": {
+    "className": "Magento\\Framework\\View\\LayoutInterface"
+  }
+}
+```
+
+**Scopes checked:** `global`, `adminhtml`, `frontend`, `crontab`, `webapi_rest`, `webapi_soap`, `graphql`
+
+**Docker support:** Automatically detects Warden, DDEV, docker-magento, and docker-compose environments. Falls back to local PHP.
 
 </details>
 

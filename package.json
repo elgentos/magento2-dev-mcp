@@ -17,6 +17,7 @@
   },
   "files": [
     "dist/",
+    "php/",
     "README.md",
     "LICENSE",
     "examples/",
