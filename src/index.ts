@@ -3,13 +3,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { exec } from "child_process";
+import { exec, execFile } from "child_process";
 import { promisify } from "util";
 import { executePhpScript } from "./php-executor.js";
 import { formatPluginAnalysis } from "./plugin-list-formatter.js";
-import { detectDockerEnvironment } from "./docker-env.js";
+import { detectDockerEnvironment, shellQuote } from "./docker-env.js";
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 const magerunBin = process.env.MAGERUN2_COMMAND || 'magerun2';
 const dockerEnv = detectDockerEnvironment(process.cwd());
@@ -30,11 +31,14 @@ const server = new McpServer({
 
 /**
  * Helper function to execute magerun2 commands with consistent error handling.
- * Accepts the subcommand (everything after the binary name, e.g. "cache:clean --all").
+ * Accepts the subcommand arguments as an array (e.g. ["cache:clean", "--all"]).
  * When a Docker environment is detected, commands are routed through the container
  * with a local fallback. The binary name can be configured via MAGERUN2_COMMAND env var.
+ *
+ * Uses execFile for local execution to prevent shell injection from user-supplied arguments.
+ * Docker wrapper commands are built using shellQuote to safely embed arguments.
  */
-async function executeMagerun2Command(subcommand: string, parseJson: boolean = false): Promise<{
+async function executeMagerun2Command(args: string[], parseJson: boolean = false): Promise<{
   success: true;
   data: any;
   rawOutput: string;
@@ -43,47 +47,57 @@ async function executeMagerun2Command(subcommand: string, parseJson: boolean = f
   error: string;
   isError: true;
 }> {
-  const fullCommand = `${magerunBin} ${subcommand}`;
-  const commands: string[] = [];
-
-  if (dockerEnv) {
-    commands.push(...dockerEnv.wrapCommand(fullCommand));
-  }
-  commands.push(fullCommand); // local fallback always included
-
+  const execOptions = { cwd: process.cwd(), timeout: 30000 };
   const errors: string[] = [];
 
-  for (const command of commands) {
-    try {
-      const { stdout, stderr } = await execAsync(command, {
-        cwd: process.cwd(),
-        timeout: 30000 // 30 second timeout
-      });
-
-      if (stderr && stderr.trim()) {
-        console.error("magerun2 stderr:", stderr);
-      }
-
-      if (parseJson) {
-        try {
-          return { success: true, data: JSON.parse(stdout), rawOutput: stdout };
-        } catch (parseError) {
-          return {
-            success: false,
-            error: `Error parsing magerun2 JSON output: ${parseError}\n\nRaw output:\n${stdout}`,
-            isError: true
-          };
-        }
-      }
-
-      return { success: true, data: stdout.trim(), rawOutput: stdout };
-
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      console.error(`magerun2 command failed: ${command}\n  ${msg}`);
-      errors.push(`[${command}] ${msg}`);
-      continue;
+  /**
+   * Process stdout/stderr from a successful execution.
+   */
+  function processOutput(stdout: string, stderr: string | undefined) {
+    if (stderr && String(stderr).trim()) {
+      console.error("magerun2 stderr:", stderr);
     }
+    if (parseJson) {
+      try {
+        return { success: true as const, data: JSON.parse(stdout), rawOutput: stdout };
+      } catch (parseError) {
+        return {
+          success: false as const,
+          error: `Error parsing magerun2 JSON output: ${parseError}\n\nRaw output:\n${stdout}`,
+          isError: true as const
+        };
+      }
+    }
+    return { success: true as const, data: stdout.trim(), rawOutput: stdout };
+  }
+
+  // Try Docker environments first (shell-based; args are safely quoted)
+  if (dockerEnv) {
+    const safeInnerCmd = [magerunBin, ...args].map(shellQuote).join(' ');
+    const dockerCommands = dockerEnv.wrapCommand(safeInnerCmd);
+
+    for (const command of dockerCommands) {
+      try {
+        const { stdout, stderr } = await execAsync(command, execOptions);
+        return processOutput(stdout, stderr);
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.error(`magerun2 command failed: ${command}\n  ${msg}`);
+        errors.push(`[${command}] ${msg}`);
+        continue;
+      }
+    }
+  }
+
+  // Local execution: use execFile to avoid shell interpretation of user arguments
+  try {
+    const { stdout, stderr } = await execFileAsync(magerunBin, args, execOptions);
+    return processOutput(stdout, stderr as string | undefined);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    const displayCmd = `${magerunBin} ${args.join(' ')}`;
+    console.error(`magerun2 command failed: ${displayCmd}\n  ${msg}`);
+    errors.push(`[${displayCmd}] ${msg}`);
   }
 
   // All commands failed — build a helpful error message
@@ -147,8 +161,7 @@ server.registerTool(
     }
   },
   async ({ scope = "global" }) => {
-    const command = `dev:di:preferences:list --format=json ${scope}`;
-    const result = await executeMagerun2Command(command, true);
+    const result = await executeMagerun2Command(['dev:di:preferences:list', '--format=json', scope], true);
 
     if (!result.success) {
       return {
@@ -188,9 +201,8 @@ server.registerTool(
     }
   },
   async ({ types }) => {
-    const cacheTypesArg = types && types.length > 0 ? types.join(' ') : '';
-    const command = `cache:clean ${cacheTypesArg}`.trim();
-    const result = await executeMagerun2Command(command);
+    const args: string[] = ['cache:clean', ...(types ?? [])];
+    const result = await executeMagerun2Command(args);
 
     if (!result.success) {
       return {
@@ -228,9 +240,8 @@ server.registerTool(
     }
   },
   async ({ types }) => {
-    const cacheTypesArg = types && types.length > 0 ? types.join(' ') : '';
-    const command = `cache:flush ${cacheTypesArg}`.trim();
-    const result = await executeMagerun2Command(command);
+    const args: string[] = ['cache:flush', ...(types ?? [])];
+    const result = await executeMagerun2Command(args);
 
     if (!result.success) {
       return {
@@ -268,8 +279,7 @@ server.registerTool(
     }
   },
   async ({ types }) => {
-    const command = `cache:enable ${types.join(' ')}`;
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(['cache:enable', ...types]);
 
     if (!result.success) {
       return {
@@ -307,8 +317,7 @@ server.registerTool(
     }
   },
   async ({ types }) => {
-    const command = `cache:disable ${types.join(' ')}`;
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(['cache:disable', ...types]);
 
     if (!result.success) {
       return {
@@ -342,8 +351,7 @@ server.registerTool(
     inputSchema: {}
   },
   async () => {
-    const command = `cache:status`;
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(['cache:status']);
 
     if (!result.success) {
       return {
@@ -383,9 +391,10 @@ server.registerTool(
     }
   },
   async ({ key, type }) => {
-    const typeArg = type ? `--type=${type}` : '';
-    const command = `cache:view ${typeArg} "${key}"`.trim();
-    const result = await executeMagerun2Command(command);
+    const args: string[] = ['cache:view'];
+    if (type) args.push('--type', type);
+    args.push(key);
+    const result = await executeMagerun2Command(args);
 
     if (!result.success) {
       return {
@@ -429,15 +438,11 @@ server.registerTool(
     }
   },
   async ({ format = "table", enabled, disabled }) => {
-    let command = `dev:module:list --format=${format}`;
+    const args: string[] = ['dev:module:list', `--format=${format}`];
+    if (enabled) args.push('--only-enabled');
+    else if (disabled) args.push('--only-disabled');
 
-    if (enabled) {
-      command += ' --only-enabled';
-    } else if (disabled) {
-      command += ' --only-disabled';
-    }
-
-    const result = await executeMagerun2Command(command, format === "json");
+    const result = await executeMagerun2Command(args, format === "json");
 
     if (!result.success) {
       return {
@@ -482,13 +487,10 @@ server.registerTool(
     }
   },
   async ({ format = "table", event }) => {
-    let command = `dev:module:observer:list --format=${format}`;
+    const args: string[] = ['dev:module:observer:list', `--format=${format}`];
+    if (event) args.push(event);
 
-    if (event) {
-      command += ` "${event}"`;
-    }
-
-    const result = await executeMagerun2Command(command, format === "json");
+    const result = await executeMagerun2Command(args, format === "json");
 
     if (!result.success) {
       return {
@@ -590,65 +592,24 @@ server.registerTool(
     authorEmail,
     description
   }) => {
-    let command = `dev:module:create "${vendorNamespace}" "${moduleName}"`;
+    const args: string[] = ['dev:module:create', vendorNamespace, moduleName];
 
-    if (minimal) {
-      command += ` --minimal`;
-    }
+    if (minimal) args.push('--minimal');
+    if (addBlocks) args.push('--add-blocks');
+    if (addHelpers) args.push('--add-helpers');
+    if (addModels) args.push('--add-models');
+    if (addSetup) args.push('--add-setup');
+    if (addAll) args.push('--add-all');
+    if (enable) args.push('--enable');
+    if (modman) args.push('--modman');
+    if (addReadme) args.push('--add-readme');
+    if (addComposer) args.push('--add-composer');
+    if (addStrictTypes) args.push('--add-strict-types');
+    if (authorName) args.push('--author-name', authorName);
+    if (authorEmail) args.push('--author-email', authorEmail);
+    if (description) args.push('--description', description);
 
-    if (addBlocks) {
-      command += ` --add-blocks`;
-    }
-
-    if (addHelpers) {
-      command += ` --add-helpers`;
-    }
-
-    if (addModels) {
-      command += ` --add-models`;
-    }
-
-    if (addSetup) {
-      command += ` --add-setup`;
-    }
-
-    if (addAll) {
-      command += ` --add-all`;
-    }
-
-    if (enable) {
-      command += ` --enable`;
-    }
-
-    if (modman) {
-      command += ` --modman`;
-    }
-
-    if (addReadme) {
-      command += ` --add-readme`;
-    }
-
-    if (addComposer) {
-      command += ` --add-composer`;
-    }
-
-    if (addStrictTypes) {
-      command += ` --add-strict-types`;
-    }
-
-    if (authorName) {
-      command += ` --author-name="${authorName}"`;
-    }
-
-    if (authorEmail) {
-      command += ` --author-email="${authorEmail}"`;
-    }
-
-    if (description) {
-      command += ` --description="${description}"`;
-    }
-
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(args);
 
     if (!result.success) {
       return {
@@ -686,8 +647,7 @@ server.registerTool(
     }
   },
   async ({ format = "table" }) => {
-    const command = `sys:info --format=${format}`;
-    const result = await executeMagerun2Command(command, format === "json");
+    const result = await executeMagerun2Command(['sys:info', `--format=${format}`], format === "json");
 
     if (!result.success) {
       return {
@@ -725,8 +685,7 @@ server.registerTool(
     inputSchema: {}
   },
   async () => {
-    const command = `sys:check`;
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(['sys:check']);
 
     if (!result.success) {
       return {
@@ -770,21 +729,12 @@ server.registerTool(
     }
   },
   async ({ path, scope, scopeId }) => {
-    let command = `config:show`;
+    const args: string[] = ['config:show'];
+    if (path) args.push(path);
+    if (scope) args.push('--scope', scope);
+    if (scopeId) args.push('--scope-id', scopeId);
 
-    if (path) {
-      command += ` "${path}"`;
-    }
-
-    if (scope) {
-      command += ` --scope="${scope}"`;
-    }
-
-    if (scopeId) {
-      command += ` --scope-id="${scopeId}"`;
-    }
-
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(args);
 
     if (!result.success) {
       return {
@@ -832,21 +782,12 @@ server.registerTool(
     }
   },
   async ({ path, value, scope, scopeId, encrypt }) => {
-    let command = `config:set "${path}" "${value}"`;
+    const args: string[] = ['config:set', path, value];
+    if (scope) args.push('--scope', scope);
+    if (scopeId) args.push('--scope-id', scopeId);
+    if (encrypt) args.push('--encrypt');
 
-    if (scope) {
-      command += ` --scope="${scope}"`;
-    }
-
-    if (scopeId) {
-      command += ` --scope-id="${scopeId}"`;
-    }
-
-    if (encrypt) {
-      command += ` --encrypt`;
-    }
-
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(args);
 
     if (!result.success) {
       return {
@@ -886,13 +827,10 @@ server.registerTool(
     }
   },
   async ({ path, storeId }) => {
-    let command = `config:store:get "${path}"`;
+    const args: string[] = ['config:store:get', path];
+    if (storeId) args.push('--store-id', storeId);
 
-    if (storeId) {
-      command += ` --store-id="${storeId}"`;
-    }
-
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(args);
 
     if (!result.success) {
       return {
@@ -934,13 +872,10 @@ server.registerTool(
     }
   },
   async ({ path, value, storeId }) => {
-    let command = `config:store:set "${path}" "${value}"`;
+    const args: string[] = ['config:store:set', path, value];
+    if (storeId) args.push('--store-id', storeId);
 
-    if (storeId) {
-      command += ` --store-id="${storeId}"`;
-    }
-
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(args);
 
     if (!result.success) {
       return {
@@ -980,8 +915,7 @@ server.registerTool(
     }
   },
   async ({ query, format = "table" }) => {
-    const command = `db:query --format=${format} "${query}"`;
-    const result = await executeMagerun2Command(command, format === "json");
+    const result = await executeMagerun2Command(['db:query', `--format=${format}`, query], format === "json");
 
     if (!result.success) {
       return {
@@ -1023,13 +957,10 @@ server.registerTool(
     }
   },
   async ({ keepGenerated }) => {
-    let command = `setup:upgrade`;
+    const args: string[] = ['setup:upgrade'];
+    if (keepGenerated) args.push('--keep-generated');
 
-    if (keepGenerated) {
-      command += ` --keep-generated`;
-    }
-
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(args);
 
     if (!result.success) {
       return {
@@ -1063,8 +994,7 @@ server.registerTool(
     inputSchema: {}
   },
   async () => {
-    const command = `setup:di:compile`;
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(['setup:di:compile']);
 
     if (!result.success) {
       return {
@@ -1098,8 +1028,7 @@ server.registerTool(
     inputSchema: {}
   },
   async () => {
-    const command = `setup:db:status`;
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(['setup:db:status']);
 
     if (!result.success) {
       return {
@@ -1146,25 +1075,27 @@ server.registerTool(
     }
   },
   async ({ languages, themes, jobs, force }) => {
-    let command = `setup:static-content:deploy`;
+    const args: string[] = ['setup:static-content:deploy'];
 
     if (languages && languages.length > 0) {
-      command += ` ${languages.join(' ')}`;
+      args.push(...languages);
     }
 
     if (themes && themes.length > 0) {
-      command += ` --theme=${themes.join(' --theme=')}`;
+      for (const theme of themes) {
+        args.push('--theme', theme);
+      }
     }
 
     if (jobs) {
-      command += ` --jobs=${jobs}`;
+      args.push('--jobs', String(jobs));
     }
 
     if (force) {
-      command += ` --force`;
+      args.push('--force');
     }
 
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(args);
 
     if (!result.success) {
       return {
@@ -1202,8 +1133,7 @@ server.registerTool(
     }
   },
   async ({ format = "table" }) => {
-    const command = `sys:store:list --format=${format}`;
-    const result = await executeMagerun2Command(command, format === "json");
+    const result = await executeMagerun2Command(['sys:store:list', `--format=${format}`], format === "json");
 
     if (!result.success) {
       return {
@@ -1245,8 +1175,7 @@ server.registerTool(
     }
   },
   async ({ format = "table" }) => {
-    const command = `dev:theme:list --format=${format}`;
-    const result = await executeMagerun2Command(command, format === "json");
+    const result = await executeMagerun2Command(['dev:theme:list', `--format=${format}`], format === "json");
 
     if (!result.success) {
       return {
@@ -1288,8 +1217,7 @@ server.registerTool(
     }
   },
   async ({ format = "table" }) => {
-    const command = `sys:store:config:base-url:list --format=${format}`;
-    const result = await executeMagerun2Command(command, format === "json");
+    const result = await executeMagerun2Command(['sys:store:config:base-url:list', `--format=${format}`], format === "json");
 
     if (!result.success) {
       return {
@@ -1331,8 +1259,7 @@ server.registerTool(
     }
   },
   async ({ format = "table" }) => {
-    const command = `sys:cron:list --format=${format}`;
-    const result = await executeMagerun2Command(command, format === "json");
+    const result = await executeMagerun2Command(['sys:cron:list', `--format=${format}`], format === "json");
 
     if (!result.success) {
       return {
@@ -1377,13 +1304,10 @@ server.registerTool(
     }
   },
   async ({ format = "table", storeId }) => {
-    let command = `sys:url:list --format=${format}`;
+    const args: string[] = ['sys:url:list', `--format=${format}`];
+    if (storeId) args.push('--store-id', storeId);
 
-    if (storeId) {
-      command += ` --store-id=${storeId}`;
-    }
-
-    const result = await executeMagerun2Command(command, format === "json");
+    const result = await executeMagerun2Command(args, format === "json");
 
     if (!result.success) {
       return {
@@ -1425,8 +1349,7 @@ server.registerTool(
     }
   },
   async ({ format = "table" }) => {
-    const command = `sys:website:list --format=${format}`;
-    const result = await executeMagerun2Command(command, format === "json");
+    const result = await executeMagerun2Command(['sys:website:list', `--format=${format}`], format === "json");
 
     if (!result.success) {
       return {
@@ -1471,17 +1394,11 @@ server.registerTool(
     }
   },
   async ({ job, group }) => {
-    let command = `sys:cron:run`;
+    const args: string[] = ['sys:cron:run'];
+    if (job) args.push(job);
+    if (group) args.push('--group', group);
 
-    if (job) {
-      command += ` "${job}"`;
-    }
-
-    if (group) {
-      command += ` --group="${group}"`;
-    }
-
-    const result = await executeMagerun2Command(command);
+    const result = await executeMagerun2Command(args);
 
     if (!result.success) {
       return {
