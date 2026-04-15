@@ -1,4 +1,6 @@
-Run `magerun2 mcp:server:start` - see [magerun2 9.3.0 release notes](https://magerun.net/n98-magerun2-v9-3-0/).
+# Abandoned - elgentos/magento2-dev-mcp
+
+This project is abandoned since it mainly exposed magerun commands through an MCP. Magerun now offers an internal MCP server; just run `magerun2 mcp:server:start` - see [magerun2 9.3.0 release notes](https://magerun.net/n98-magerun2-v9-3-0/).
 
 A Model Context Protocol (MCP) server for Magento 2 development, designed to integrate with AI agents like Claude, Cursor, Continue.dev, and Augment Code.
 
