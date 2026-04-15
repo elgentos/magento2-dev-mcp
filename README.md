@@ -1,4 +1,4 @@
-# Magento 2 Development MCP Server
+Run `magerun2 mcp:server:start` - see [magerun2 9.3.0 release notes](https://magerun.net/n98-magerun2-v9-3-0/).
 
 A Model Context Protocol (MCP) server for Magento 2 development, designed to integrate with AI agents like Claude, Cursor, Continue.dev, and Augment Code.
 
